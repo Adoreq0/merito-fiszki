@@ -1,14 +1,17 @@
 import os
 from typing import List, Optional
+
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, select
 from sqlalchemy.orm import joinedload
 from pydantic import BaseModel, ConfigDict
+import os
 
 # --- Konfiguracja Bazy Danych ---
-DATABASE_URL = "postgresql+asyncpg://adam:1234@localhost/meritoFiszki"
+# Wczytanie zmiennej środowiskowej DATABASE_URL, lub użycie domyślnej wartości
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://adam:1234@localhost/meritoFiszki")
 
 # Tworzenie silnika i sesji SQLAlchemy
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -32,7 +35,7 @@ class Question(Base):
     
     # Definiuje relację "jeden do wielu"
     # 'answers' będzie listą obiektów Answer powiązanych z tym pytaniem
-    answers = relationship("Answer", back_populates="question")
+    answers = relationship("Answer", back_populates="question", cascade="all, delete-orphan")
 
 class Answer(Base):
     __tablename__ = "answers"
@@ -90,7 +93,64 @@ async def get_db():
 @app.on_event("startup")
 async def startup():
     async with engine.begin() as conn:
-        pass
+        # Create tables if they don't exist
+        await conn.run_sync(Base.metadata.create_all)
+        
+        # Check if questions exist, if not, populate with sample data
+        result = await conn.execute(select(Question))
+        if result.scalars().first() is None:
+            await populate_sample_data(conn)
+
+
+async def populate_sample_data(conn):
+    questions_data = [
+        {"content": "Gdzie znajduje się biblioteka?", "category": 1, "answers": [
+            {"content": "Na parterze w budynku A", "is_correct": True},
+            {"content": "Na drugim piętrze budynku B", "is_correct": False},
+            {"content": "Na trzecim piętrze budynku C", "is_correct": False},
+            {"content": "W piwnicy budynku A", "is_correct": False}
+        ]},
+        {"content": "W którym roku powstała uczelnia WSB Merito w Gdańsku?", "category": 1, "answers": [
+            {"content": "1998", "is_correct": True},
+            {"content": "2001", "is_correct": False},
+            {"content": "2005", "is_correct": False},
+            {"content": "2010", "is_correct": False}
+        ]},
+        {"content": "Jaki kolor dominuje w logo WSB Merito?", "category": 1, "answers": [
+            {"content": "Czerwony", "is_correct": False},
+            {"content": "Zielony", "is_correct": False},
+            {"content": "Niebieski", "is_correct": True},
+            {"content": "Żółty", "is_correct": False}
+        ]},
+        {"content": "Ile wydziałów posiada uczelnia WSB Merito?", "category": 1, "answers": [
+            {"content": "2 wydziały", "is_correct": False},
+            {"content": "3 wydziały", "is_correct": False},
+            {"content": "4 wydziały", "is_correct": True},
+            {"content": "5 wydziałów", "is_correct": False}
+        ]},
+        {"content": "Gdzie znajduje się główny kampus WSB Merito w Gdańsku?", "category": 1, "answers": [
+            {"content": "Przy ul. Grunwaldzkiej", "is_correct": False},
+            {"content": "Przy ul. Długiej", "is_correct": False},
+            {"content": "Przy ul. Traugutta", "is_correct": False},
+            {"content": "Przy ul. Wały Piastowskie", "is_correct": True}
+        ]}
+    ]
+
+    for q_data in questions_data:
+        question = Question(content=q_data["content"], category=q_data["category"])
+        conn.add(question)
+        await conn.flush() # Ensure question_id is generated
+
+        for a_data in q_data["answers"]:
+            answer = Answer(
+                question_id=question.question_id,
+                content=a_data["content"],
+                is_correct=a_data["is_correct"]
+            )
+            conn.add(answer)
+    await conn.commit()
+    print("Sample data populated!")
+
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -175,3 +235,39 @@ async def get_all_answers(
     )
     answers = result.scalars().all()
     return answers
+
+@app.get(
+    "/questions_with_answers/",
+    response_model=List[QuestionWithAnswersSchema],
+    summary="Pobierz listę wszystkich pytań wraz z odpowiedziami",
+    tags=["Pytania"]
+)
+async def get_all_questions_with_answers(
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Pobiera listę wszystkich pytań z bazy danych wraz z ich odpowiedziami.
+    """
+    result = await db.execute(
+        select(Question).options(joinedload(Question.answers))
+    )
+    questions = result.scalars().unique().all()
+    return questions
+
+@app.get(
+    "/questions_with_answers/",
+    response_model=List[QuestionWithAnswersSchema],
+    summary="Pobierz listę wszystkich pytań wraz z odpowiedziami",
+    tags=["Pytania"]
+)
+async def get_all_questions_with_answers(
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Pobiera listę wszystkich pytań z bazy danych wraz z ich odpowiedziami.
+    """
+    result = await db.execute(
+        select(Question).options(joinedload(Question.answers))
+    )
+    questions = result.scalars().unique().all()
+    return questions
