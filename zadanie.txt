@@ -1,0 +1,3 @@
+W folderze "merito-fiszki-master" masz projekt aplikacji zrobiony w formie strony internetowej, który ma działającą logikę działania aplikacji poza łączeniem się z API do uzyskania danych.
+W folderze "MeritoFiszki API" masz API do uzyskania pytań i odpowiedzi.
+W folderze "MeritoFiszki" masz docelowy projekt, w którym zrobiony jest docelowy wygląd aplikacji. Dorób logikę działania taka jak jest w "merito-fiszki-master" + podłącz się pod API do uzyskania danych fiszek.
