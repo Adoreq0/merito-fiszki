@@ -1,5 +1,0 @@
-W folderze "merito-fiszki-master" masz projekt aplikacji zrobiony w formie strony internetowej, który ma działającą logikę działania aplikacji poza łączeniem się z API do uzyskania danych.
-W folderze "MeritoFiszki API" masz API do uzyskania pytań i odpowiedzi.
-W folderze "MeritoFiszki" masz docelowy wygląd aplikacji. W folderze "merito-fiszki-master" masz działającą logikę działania aplikacji, ale wygląd trzeba zrobic jak w folderze "MeritoFiszki" + podłącz się pod API do uzyskania danych fiszek.
-Wykonaj testy apliakcji za pomocą Playwright w trybie headed. Sprawdź wszystkie błędy i je popraw.
-Na koniec zrób commit do repozytorium.
