@@ -23,15 +23,8 @@ export function QuizScreen({ questions, currentQuestionIndex, onAnswer, onNext }
   const totalQuestions = questions.length;
   const questionNumber = currentQuestionIndex + 1;
 
-  // Guard against undefined currentQuestion
   if (!currentQuestion) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-gray-600">Ładowanie pytania...</p>
-        </div>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   const handleAnswerSelect = (index: number) => {
@@ -42,7 +35,7 @@ export function QuizScreen({ questions, currentQuestionIndex, onAnswer, onNext }
 
   const handleConfirm = () => {
     if (selectedAnswer === null) return;
-    
+
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
     setIsAnswered(true);
     setShowFeedback(true);
@@ -56,99 +49,113 @@ export function QuizScreen({ questions, currentQuestionIndex, onAnswer, onNext }
     onNext();
   };
 
-  const getButtonStyle = (index: number) => {
-    if (!isAnswered) {
-      return selectedAnswer === index
-        ? 'bg-blue-500 text-white border-blue-500'
-        : 'bg-white text-gray-800 border-gray-300 hover:border-blue-400';
-    }
-
-    if (index === currentQuestion.correctAnswer) {
-      return 'bg-green-500 text-white border-green-500';
-    }
-
-    if (index === selectedAnswer && selectedAnswer !== currentQuestion.correctAnswer) {
-      return 'bg-red-500 text-white border-red-500';
-    }
-
-    return 'bg-gray-100 text-gray-500 border-gray-300';
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-200 via-blue-100 to-blue-200 p-6 pb-24">
-      <div className="w-full max-w-md mx-auto flex-1 flex flex-col">
-        {/* Progress Indicator */}
-        <div className="flex justify-end mb-6">
-          <div className="bg-white px-4 py-2 rounded-full shadow">
-            <span>{questionNumber}/{totalQuestions}</span>
-          </div>
-        </div>
+    <div className="flex flex-col items-center min-h-screen relative font-sans overflow-hidden">
+      {/* Background Rectangle (textView in XML) */}
+      <div className="absolute inset-0 bg-[#BCE4FA] -z-10" />
 
-        {/* Question Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
-          <h2 className="text-center mb-6">Pytanie {questionNumber}</h2>
-          <p className="text-center text-gray-800">{currentQuestion.question}</p>
-        </div>
+      {/* Progress Bar (progressBar in XML) */}
+      {/* Width: 73dp, Height: 73dp */}
+      {/* Top Left, margins? XML says horizontal bias 0.047, vertical 0.047 */}
+      <div className="absolute top-[4%] left-[5%] w-[73px] h-[73px] flex items-center justify-center">
+        {/* Custom Ring SVG to match pbar.xml */}
+        <svg width="73" height="73" viewBox="0 0 73 73">
+          {/* Background ring (white) */}
+          <circle cx="36.5" cy="36.5" r="30" stroke="white" strokeWidth="6" fill="none" />
+          {/* Progress ring (dark blue) - static or dynamic? XML has progress=0 but max=100. Let's make it dynamic. */}
+          <circle
+            cx="36.5"
+            cy="36.5"
+            r="30"
+            stroke="#22284F"
+            strokeWidth="6"
+            fill="none"
+            strokeDasharray={188.5}
+            strokeDashoffset={188.5 - (188.5 * (currentQuestionIndex / totalQuestions))}
+            transform="rotate(-90 36.5 36.5)"
+          />
+        </svg>
+      </div>
 
-        {/* Answer Buttons */}
-        <div className="space-y-3 flex-1">
-          {currentQuestion.answers.map((answer, index) => (
+      {/* Question Title (questionTitle) */}
+      {/* Width: 138dp, Height: 34dp */}
+      {/* Top centered-ish. Vertical bias 0.1 */}
+      <div className="absolute top-[10%] w-[138px] h-[34px] flex items-center justify-center">
+        <h2 className="text-[20px] font-bold text-black">Pytanie {questionNumber}</h2>
+      </div>
+
+      {/* Question Content Box (question) */}
+      {/* Width: 239dp, Height: 75dp */}
+      {/* Vertical bias 0.199 */}
+      <div className="absolute top-[20%] w-[239px] min-h-[75px] bg-white rounded-[12px] flex items-center justify-center text-center p-2 shadow-sm">
+        <p className="text-[20px] font-bold text-black leading-tight">{currentQuestion.question}</p>
+      </div>
+
+      {/* Question Status Counter (textView9) */}
+      {/* Width: 54dp, Height: 43dp */}
+      {/* Top Right. Horizontal bias 0.955, Vertical 0.062 relative to background? */}
+      {/* XML says relative to textView (bg). */}
+      <div className="absolute top-[6%] right-[5%] w-[54px] h-[43px] bg-[#22284F] rounded-[15px] flex items-center justify-center shadow-md">
+        <span className="text-white font-bold text-[20px]">{questionNumber}/{totalQuestions}</span>
+      </div>
+
+      {/* Answers RadioGroup (radioGroup) */}
+      {/* Width: 341dp, Height: 332dp */}
+      {/* Vertical bias 0.594 */}
+      <div className="absolute top-[35%] w-[341px] flex flex-col items-center space-y-[15px]">
+        {currentQuestion.answers.map((answer, index) => {
+          const isSelected = selectedAnswer === index;
+
+          // Default: #006EFA (merito-blue)
+          // Checked: #22284F (merito-blue-dark)
+          // Text: White, 18sp, Bold
+
+          let bgClass = "bg-[#006EFA]";
+          if (isSelected) {
+            bgClass = "bg-[#22284F]";
+          }
+
+          // Feedback colors
+          if (isAnswered) {
+            if (index === currentQuestion.correctAnswer) bgClass = "bg-green-500";
+            else if (isSelected && index !== currentQuestion.correctAnswer) bgClass = "bg-red-500";
+            else bgClass = "bg-[#006EFA] opacity-50";
+          }
+
+          return (
             <button
               key={index}
               onClick={() => handleAnswerSelect(index)}
               disabled={isAnswered}
-              className={`w-full py-4 px-6 rounded-full border-2 transition-all duration-200 shadow-md ${getButtonStyle(index)} ${!isAnswered ? 'active:scale-95' : ''}`}
+              className={`w-[290px] h-[57px] rounded-[12px] text-white font-bold text-[18px] shadow-md transition-colors flex items-center justify-center ${bgClass}`}
             >
               {answer}
             </button>
-          ))}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-3 mt-6">
-          {!isAnswered ? (
-            <button
-              onClick={handleConfirm}
-              disabled={selectedAnswer === null}
-              className={`w-full py-4 px-6 rounded-full shadow-lg transition-all duration-200 ${
-                selectedAnswer !== null
-                  ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:shadow-xl active:scale-95'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Zatwierdź
-            </button>
-          ) : (
-            <>
-              {showFeedback && (
-                <div className={`w-full py-3 px-6 rounded-full text-center ${
-                  selectedAnswer === currentQuestion.correctAnswer
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {selectedAnswer === currentQuestion.correctAnswer
-                    ? '✓ Poprawna odpowiedź!'
-                    : '✗ Niepoprawna odpowiedź!'}
-                </div>
-              )}
-              <button
-                onClick={handleNextQuestion}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
-              >
-                Następne pytanie
-              </button>
-            </>
-          )}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Navigation */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
-        <div className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-          </svg>
-        </div>
+      {/* Submit/Next Button (submit) */}
+      {/* Width: 255dp, Height: 48dp */}
+      {/* Vertical bias 0.888 */}
+      <div className="absolute bottom-[11%] w-full flex justify-center">
+        {!isAnswered ? (
+          <button
+            onClick={handleConfirm}
+            disabled={selectedAnswer === null}
+            className={`w-[255px] h-[48px] rounded-[12px] text-white font-bold text-[20px] shadow-lg transition-colors flex items-center justify-center ${selectedAnswer !== null ? 'bg-[#EF537B] hover:bg-[#FF4081]' : 'bg-gray-400 cursor-not-allowed'
+              }`}
+          >
+            Zatwierdź
+          </button>
+        ) : (
+          <button
+            onClick={handleNextQuestion}
+            className="w-[255px] h-[48px] bg-[#EF537B] hover:bg-[#FF4081] text-white font-bold text-[20px] rounded-[12px] shadow-lg transition-colors flex items-center justify-center"
+          >
+            {currentQuestionIndex < totalQuestions - 1 ? 'Następne pytanie' : 'Zakończ quiz'}
+          </button>
+        )}
       </div>
     </div>
   );

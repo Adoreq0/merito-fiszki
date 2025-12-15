@@ -1,6 +1,7 @@
 import os
 from typing import List, Optional
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, select
@@ -82,6 +83,14 @@ app = FastAPI(
     description="API do pobierania pytań i odpowiedzi dla fiszek WSB Merito."
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Zależność (Dependency) do pobierania sesji bazy danych
 async def get_db():
     async with SessionLocal() as session:
@@ -105,7 +114,7 @@ def read_root():
 
 @app.get(
     "/questions/", 
-    response_model=List[QuestionSchema],
+    response_model=List[QuestionWithAnswersSchema],
     summary="Pobierz listę wszystkich pytań",
     tags=["Pytania"]
 )
@@ -115,13 +124,16 @@ async def get_all_questions(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Pobiera listę wszystkich pytań z bazy danych, bez odpowiedzi.
+    Pobiera listę wszystkich pytań z bazy danych, wraz z odpowiedziami.
     Obsługuje paginację za pomocą `skip` i `limit`.
     """
     result = await db.execute(
-        select(Question).offset(skip).limit(limit)
+        select(Question)
+        .options(joinedload(Question.answers))
+        .offset(skip)
+        .limit(limit)
     )
-    questions = result.scalars().all()
+    questions = result.scalars().unique().all()
     return questions
 
 

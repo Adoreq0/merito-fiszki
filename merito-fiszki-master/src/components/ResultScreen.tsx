@@ -7,80 +7,51 @@ interface ResultScreenProps {
 }
 
 export function ResultScreen({ score, totalQuestions, onRestart }: ResultScreenProps) {
-  const percentage = (score / totalQuestions) * 100;
-  
-  const getMessage = () => {
-    if (percentage === 100) {
-      return 'Brawo! Perfekcyjny wynik! 🎉';
-    } else if (percentage >= 80) {
-      return 'Świetna robota! 👏';
-    } else if (percentage >= 60) {
-      return 'Dobry wynik! 👍';
-    } else {
-      return 'Spróbuj jeszcze raz! 💪';
-    }
-  };
-
   return (
-    <div className="flex flex-col items-center justify-between min-h-screen bg-white p-6 pb-20">
-      <div className="w-full max-w-md flex-1 flex flex-col items-center justify-center">
-        {/* Logo */}
-        <div className="mb-12 w-full">
-          <div className="flex items-center gap-2">
-            <div className="w-12 h-12 bg-blue-600 flex items-center justify-center rounded">
-              <span className="text-white text-2xl">M</span>
-            </div>
-            <div>
-              <div className="text-sm">UNIWERSYTETY</div>
-              <div className="flex items-center gap-1">
-                <span>WSB</span>
-                <span className="text-blue-600">MERITO</span>
-              </div>
-            </div>
-          </div>
-          <div className="w-full h-1 bg-blue-600 mt-2"></div>
-        </div>
-
-        {/* Success Message */}
-        <div className="text-center mb-8">
-          <h1 className="mb-4">Gratulacje udało ci się ukończyć nasz quiz!</h1>
-          <p className="text-gray-600 mb-2">{getMessage()}</p>
-        </div>
-
-        {/* Score Display */}
-        <div className="text-center mb-12">
-          <p className="text-gray-700 mb-2">Poprawne odpowiedzi:</p>
-          <div className="text-5xl mb-4">
-            <span className="text-blue-600">{score}</span>
-            <span className="text-gray-400">/{totalQuestions}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-1000"
-              style={{ width: `${percentage}%` }}
-            ></div>
-          </div>
-          <p className="mt-2 text-gray-600">{percentage.toFixed(0)}%</p>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white relative overflow-hidden font-sans">
+      {/* Logo (imageView3) */}
+      {/* Layout: top of parent, vertical bias 0.0 -> Top aligned */}
+      <div className="absolute top-0 mt-8 z-10">
+        <img src="/logo.png" alt="WSB Merito Logo" className="h-[154px] object-contain" />
       </div>
 
-      {/* Restart Button */}
-      <div className="w-full max-w-md">
+      {/* Decorative Rectangle (textView5) */}
+      {/* Layout: top to top of imageView3, bottom to bottom of imageView3, vertical bias 0.831 */}
+      {/* 154px * 0.831 ~= 128px from top of logo */}
+      <div className="absolute top-[136px] w-[297px] h-[6px] bg-[#006EFA] z-20"></div>
+
+      {/* Main Content Box (textView4) */}
+      {/* Layout: top to top of parent, bottom to bottom of parent, vertical bias 0.803 */}
+      {/* This positions the box lower in the screen. */}
+      {/* Width: 345dp, Height: 502dp */}
+      <div className="relative w-[345px] h-[502px] bg-[#f6f6f6] rounded-[16px] shadow-lg flex flex-col items-center mt-[100px]">
+
+        {/* Text 1 (textView2) */}
+        {/* Layout: top to bottom of imageView3 (which is at top), vertical bias 0.267 relative to box constraints? */}
+        {/* It's constrained to the box (textView4). */}
+        <div className="w-[243px] h-[72px] mt-[80px] text-center flex items-center justify-center">
+          <p className="text-[18px] font-bold text-black leading-tight">
+            Gratulacje udało Ci się ukończyć nasz quiz!
+          </p>
+        </div>
+
+        {/* Text 2 (textView3) */}
+        {/* Poprawne odpowiedzi: x/5 */}
+        <div className="mt-[60px] text-center">
+          <p className="text-[17px] font-bold text-black leading-tight">
+            Poprawne odpowiedzi: <br />
+            {score}/{totalQuestions}
+          </p>
+        </div>
+
+        {/* Restart Button (buttonStart) */}
+        {/* Width: 240dp, Height: 43dp */}
         <button
           onClick={onRestart}
-          className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
+          className="absolute bottom-[80px] w-[240px] h-[43px] bg-[#EF537B] hover:bg-[#FF4081] text-white font-bold text-[18px] rounded-[12px] shadow-lg transition-colors flex items-center justify-center"
         >
           Rozpocznij jeszcze raz
         </button>
-      </div>
-
-      {/* Navigation */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
-        <div className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-          </svg>
-        </div>
       </div>
     </div>
   );
