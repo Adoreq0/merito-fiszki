@@ -23,6 +23,16 @@ export default function App() {
     fetchQuestions();
   }, []);
 
+  // Fisher-Yates shuffle algorithm
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
+
   const fetchQuestions = async () => {
     try {
       setLoading(true);
@@ -40,15 +50,27 @@ export default function App() {
       }
 
       if (data) {
-        const formattedQuestions: Question[] = data.map((q: any) => {
-          const options = q.answers.map((a: any) => a.content);
-          const correctAnswerIndex = q.answers.findIndex((a: any) => a.is_correct);
+        // Shuffle questions
+        const shuffledData = shuffleArray(data);
+
+        const formattedQuestions: Question[] = shuffledData.map((q: any) => {
+          // Prepare options with their original correct status
+          const originalOptions = q.answers.map((a: any) => ({
+            content: a.content,
+            isCorrect: a.is_correct
+          }));
+
+          // Shuffle options
+          const shuffledOptions = shuffleArray(originalOptions);
+
+          // Find new correct answer index
+          const correctAnswerIndex = shuffledOptions.findIndex((o: any) => o.isCorrect);
 
           return {
             id: q.id,
             question: q.content,
-            options: options,
-            correctAnswer: correctAnswerIndex !== -1 ? correctAnswerIndex : 0 // Default to 0 if no correct answer marked
+            options: shuffledOptions.map((o: any) => o.content),
+            correctAnswer: correctAnswerIndex !== -1 ? correctAnswerIndex : 0
           };
         });
         setQuestions(formattedQuestions);
