@@ -45,7 +45,7 @@ export default function App() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching questions:', error);
+        console.error('Błąd podczas pobierania pytań:', error);
         return;
       }
 
@@ -78,7 +78,7 @@ export default function App() {
         setQuestions(formattedQuestions);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Błąd:', error);
     } finally {
       setLoading(false);
     }

@@ -151,8 +151,8 @@ export function QuizScreen({
                 onClick={handleConfirm}
                 disabled={selectedAnswer === null}
                 className={`w-full py-3 px-6 rounded-[15px] transition-all text-white shadow-lg ${selectedAnswer === null
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
                   }`}
               >
                 Zatwierdź
@@ -167,7 +167,7 @@ export function QuizScreen({
                 </button>
                 {!isCorrect && (
                   <div className="bg-gradient-to-r from-red-400 to-red-500 text-white py-3 px-6 rounded-[15px] text-center shadow-lg">
-                    Nie poprawna odpowiedź!
+                    Niepoprawna odpowiedź!
                   </div>
                 )}
               </>
