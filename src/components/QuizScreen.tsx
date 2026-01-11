@@ -34,7 +34,7 @@ export function QuizScreen({
     setConfirmed(false);
   };
 
-  const isCorrect = selectedAnswer === question.correctAnswer;
+  const isCorrect = selectedAnswer !== null && question.correctAnswers.includes(selectedAnswer);
 
   // Calculate circular progress
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
@@ -81,7 +81,7 @@ export function QuizScreen({
               </defs>
             </svg>
           </div>
-          
+
           {/* Question Counter - Right */}
           <div className="bg-gray-800 text-white px-4 py-2 rounded-full text-sm">
             {currentQuestion + 1}/{totalQuestions}
@@ -107,10 +107,10 @@ export function QuizScreen({
           <div className="space-y-3">
             {question.options.map((option, index) => {
               let buttonClasses = "w-full py-3 px-6 rounded-[15px] transition-all text-white shadow-lg ";
-              
+
               if (confirmed) {
                 // Po zatwierdzeniu
-                if (index === question.correctAnswer) {
+                if (question.correctAnswers.includes(index)) {
                   // Poprawna odpowiedź - zawsze zielona
                   buttonClasses += "bg-gradient-to-r from-green-400 to-green-500";
                 } else if (index === selectedAnswer) {
@@ -150,11 +150,10 @@ export function QuizScreen({
               <button
                 onClick={handleConfirm}
                 disabled={selectedAnswer === null}
-                className={`w-full py-3 px-6 rounded-[15px] transition-all text-white shadow-lg ${
-                  selectedAnswer === null
+                className={`w-full py-3 px-6 rounded-[15px] transition-all text-white shadow-lg ${selectedAnswer === null
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
-                }`}
+                  }`}
               >
                 Zatwierdź
               </button>

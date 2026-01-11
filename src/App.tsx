@@ -8,7 +8,7 @@ export type Question = {
   id: number;
   question: string;
   options: string[];
-  correctAnswer: number;
+  correctAnswers: number[];
 };
 
 export default function App() {
@@ -63,14 +63,16 @@ export default function App() {
           // Shuffle options
           const shuffledOptions = shuffleArray(originalOptions);
 
-          // Find new correct answer index
-          const correctAnswerIndex = shuffledOptions.findIndex((o: any) => o.isCorrect);
+          // Find new correct answer indices
+          const correctAnswers = shuffledOptions
+            .map((o: any, index: number) => (o.isCorrect ? index : -1))
+            .filter((index: number) => index !== -1);
 
           return {
             id: q.id,
             question: q.content,
             options: shuffledOptions.map((o: any) => o.content),
-            correctAnswer: correctAnswerIndex !== -1 ? correctAnswerIndex : 0
+            correctAnswers: correctAnswers
           };
         });
         setQuestions(formattedQuestions);
@@ -93,7 +95,7 @@ export default function App() {
     const newUserAnswers = [...userAnswers, answerIndex];
     setUserAnswers(newUserAnswers);
 
-    if (answerIndex === questions[currentQuestion].correctAnswer) {
+    if (questions[currentQuestion].correctAnswers.includes(answerIndex)) {
       setScore(score + 1);
     }
 
@@ -109,6 +111,7 @@ export default function App() {
     setCurrentQuestion(0);
     setScore(0);
     setUserAnswers([]);
+    fetchQuestions();
   };
 
   if (loading) {
