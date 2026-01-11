@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StartScreen } from './components/StartScreen';
 import { QuizScreen } from './components/QuizScreen';
 import { ResultsScreen } from './components/ResultsScreen';
+import { supabase } from './supabase';
 
 export type Question = {
   id: number;
@@ -10,44 +11,54 @@ export type Question = {
   correctAnswer: number;
 };
 
-const questions: Question[] = [
-  {
-    id: 1,
-    question: "Gdzie znajduje się biblioteka?",
-    options: ["Na parterze w budynku A", "Na drugim piętrze budynku B", "Na trzecim piętrze budynku C", "W piwnicy budynku A"],
-    correctAnswer: 0
-  },
-  {
-    id: 2,
-    question: "Która z poniższych uczelni jest częścią grupy WSB Merito?",
-    options: ["WSB Merito w Warszawie", "Uniwersytet Gdański", "Politechnika Gdańska", "Akademia Sztuk Pięknych"],
-    correctAnswer: 0
-  },
-  {
-    id: 3,
-    question: "Jakie kierunki studiów oferuje WSB Merito Gdańsk?",
-    options: ["Tylko ekonomiczne", "Tylko informatyczne", "Ekonomiczne, informatyczne i inne", "Tylko medyczne"],
-    correctAnswer: 2
-  },
-  {
-    id: 4,
-    question: "WSB Merito Gdańsk oferuje studia w trybie:",
-    options: ["Tylko stacjonarnym", "Tylko niestacjonarnym", "Stacjonarnym i niestacjonarnym", "Tylko online"],
-    correctAnswer: 2
-  },
-  {
-    id: 5,
-    question: "Która z poniższych form studiów jest dostępna w WSB Merito Gdańsk?",
-    options: ["Studia licencjackie", "Studia magisterskie", "Studia podyplomowe", "Wszystkie powyższe"],
-    correctAnswer: 3
-  }
-];
-
 export default function App() {
   const [gameState, setGameState] = useState<'start' | 'quiz' | 'results'>('start');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [userAnswers, setUserAnswers] = useState<number[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
+
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('questions')
+        .select(`
+          *,
+          answers (*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching questions:', error);
+        return;
+      }
+
+      if (data) {
+        const formattedQuestions: Question[] = data.map((q: any) => {
+          const options = q.answers.map((a: any) => a.content);
+          const correctAnswerIndex = q.answers.findIndex((a: any) => a.is_correct);
+
+          return {
+            id: q.id,
+            question: q.content,
+            options: options,
+            correctAnswer: correctAnswerIndex !== -1 ? correctAnswerIndex : 0 // Default to 0 if no correct answer marked
+          };
+        });
+        setQuestions(formattedQuestions);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStart = () => {
     setGameState('quiz');
@@ -78,10 +89,18 @@ export default function App() {
     setUserAnswers([]);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-xl text-blue-600 font-semibold">Ładowanie pytań...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {gameState === 'start' && <StartScreen onStart={handleStart} />}
-      {gameState === 'quiz' && (
+      {gameState === 'quiz' && questions.length > 0 && (
         <QuizScreen
           question={questions[currentQuestion]}
           currentQuestion={currentQuestion}
