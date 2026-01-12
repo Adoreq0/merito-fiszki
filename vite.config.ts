@@ -14,23 +14,43 @@ export default defineConfig({
       description: 'Quiz App for WSB Merito',
       start_url: '/',
       display: 'standalone',
+      orientation: 'portrait',
       background_color: '#ffffff',
       theme_color: '#1976d2',
+      scope: '/',
       icons: [
         {
           src: '/icon.jpg',
           sizes: '192x192',
-          type: 'image/jpeg'
+          type: 'image/jpeg',
+          purpose: 'any maskable'
         },
         {
           src: '/icon.jpg',
           sizes: '512x512',
-          type: 'image/jpeg'
+          type: 'image/jpeg',
+          purpose: 'any maskable'
         }
       ]
     },
     workbox: {
-      globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg}']
+      globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'google-fonts-cache',
+            expiration: {
+              maxEntries: 10,
+              maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        }
+      ]
     },
     devOptions: {
       enabled: true,
@@ -89,5 +109,6 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    host: true, // Allow access from network (for mobile testing)
   },
 });
