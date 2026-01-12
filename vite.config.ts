@@ -2,9 +2,41 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), VitePWA({
+    registerType: 'autoUpdate',
+    includeAssets: ['icon.jpg'],
+    manifest: {
+      name: 'Merito Fiszki',
+      short_name: 'Merito Fiszki',
+      description: 'Quiz App for WSB Merito',
+      start_url: '/',
+      display: 'standalone',
+      background_color: '#ffffff',
+      theme_color: '#1976d2',
+      icons: [
+        {
+          src: '/icon.jpg',
+          sizes: '192x192',
+          type: 'image/jpeg'
+        },
+        {
+          src: '/icon.jpg',
+          sizes: '512x512',
+          type: 'image/jpeg'
+        }
+      ]
+    },
+    workbox: {
+      globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg}']
+    },
+    devOptions: {
+      enabled: true,
+      type: 'module'
+    }
+  })],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
     alias: {
